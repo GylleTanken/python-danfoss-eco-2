@@ -17,6 +17,7 @@ class DanfossEco2(btle.DefaultDelegate):
 
     max_send_time = 30
     max_connect_time = 40
+    connected = False
 
     def __init__(self, mac="00:04:2F:C1:02:A2", encryption_key=b'\xA5\x7F\xF7\x6F\xE8\x6D\xA0\x65\x77\x91\x15\xC2\xA6\x7E\x4A\x92', pin=0000):
         self.mac = mac
@@ -34,7 +35,7 @@ class DanfossEco2(btle.DefaultDelegate):
         self.set_temperature = 0
 
         btle.DefaultDelegate.__init__(self)
-        connected = False
+        self.connected = False
 
     def __del__(self):
         self.disconnect()
@@ -89,13 +90,13 @@ class DanfossEco2(btle.DefaultDelegate):
         self.connected = False
 
     def login(self):
-        if connected:
+        if self.connected:
             return self.send_BLE_packet(self.pin_handle, b'\x00\x00\x00\x00')
         else:
             return False
 
     def getTemperature(self):
-        if connected:
+        if self.connected:
             data = self.read_encrypted_handle(self.temperature_handle)
             if data[1] != 0:
                 self.current_temperature = data[1]/2
@@ -105,7 +106,7 @@ class DanfossEco2(btle.DefaultDelegate):
             return False
 
     def getBattery(self):
-        if connected:
+        if self.connected:
             data = self.battery_handle.read()
             self.battery = data[0]
             return self.battery
@@ -113,7 +114,7 @@ class DanfossEco2(btle.DefaultDelegate):
             return False
 
     def getDeviceName(self):
-        if connected:
+        if self.connected:
             data = self.read_encrypted_handle(self.device_name_handle)
             for i, char in enumerate(data):
                 if char == 0:
@@ -125,7 +126,7 @@ class DanfossEco2(btle.DefaultDelegate):
             return False
 
     def setTemperature(self, temp):
-        if connected:
+        if self.connected:
             data = bytearray([round(temp*2)]) + bytearray(7)
             return self.send_encrypted_packet(self.temperature_handle, data)
         else:
@@ -133,7 +134,7 @@ class DanfossEco2(btle.DefaultDelegate):
 
     def update(self):
         self.connect()
-        if connected:
+        if self.connected:
             self.login()
             self.getDeviceName()
             self.getBattery()
