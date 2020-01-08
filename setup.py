@@ -8,13 +8,14 @@ import warnings
 
 dynamic_requires = []
 
-version = '0.1'
+version = '0.1.1'
 
 setup(
     name='DanfossEco2',
     version=version,
     url='https://github.com/GylleTanken/python-danfoss-eco-2',
     packages=find_packages(),
+    install_requires=['bluepy==1.3.0', 'xxtea==1.3.0'],
     scripts=[],
     description='Python API for controlling Danfoss Eco 2',
     classifiers=[
