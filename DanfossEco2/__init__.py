@@ -44,45 +44,49 @@ class DanfossEco2(btle.DefaultDelegate):
 
     def __enter__(self):
         self.mutex.acquire()
-        self.device = btle.Peripheral()
-        self.device.withDelegate(self)
+        try:
+            self.device = btle.Peripheral()
+            self.device.withDelegate(self)
 
-        start_time = time.time()
-        connection_try_count = 0
+            start_time = time.time()
+            connection_try_count = 0
 
-        while True:
-            connection_try_count += 1
-            if connection_try_count > 1:
-                print("Retrying to connect to device with mac: " + self.mac + ", try number: " + str(connection_try_count))
-            try:
-                self.device.connect(self.mac, addrType=btle.ADDR_TYPE_PUBLIC)
-                break
-            except btle.BTLEException as ex:
-                print("Could not connect to device with mac: " + self.mac + ", error: " + str(ex))
-                if time.time() - start_time >= self.max_connect_time:
-                    print("Connection timeout")
-                    raise
+            while True:
+                connection_try_count += 1
+                if connection_try_count > 1:
+                    print("Retrying to connect to device with mac: " + self.mac + ", try number: " + str(connection_try_count))
+                try:
+                    self.device.connect(self.mac, addrType=btle.ADDR_TYPE_PUBLIC)
+                    break
+                except btle.BTLEException as ex:
+                    print("Could not connect to device with mac: " + self.mac + ", error: " + str(ex))
+                    if time.time() - start_time >= self.max_connect_time:
+                        print("Connection timeout")
+                        raise
 
-        handles = self.device.getCharacteristics()
-        for handle in handles:
-            if handle.uuid == self.pin_uuid:
-                self.pin_handle = handle
-            elif handle.uuid == self.temperature_uuid:
-                self.temperature_handle = handle
-            elif handle.uuid == self.device_name_uuid:
-                self.device_name_handle = handle
-            elif handle.uuid == self.battery_uuid:
-                self.battery_handle = handle
+            handles = self.device.getCharacteristics()
+            for handle in handles:
+                if handle.uuid == self.pin_uuid:
+                    self.pin_handle = handle
+                elif handle.uuid == self.temperature_uuid:
+                    self.temperature_handle = handle
+                elif handle.uuid == self.device_name_uuid:
+                    self.device_name_handle = handle
+                elif handle.uuid == self.battery_uuid:
+                    self.battery_handle = handle
 
-        if self.pin_handle == None or self.temperature_handle == None or self.device_name_handle == None or self.battery_handle == None:
-            self.device = None
-            raise Exception("Unable to find all handles")
+            if self.pin_handle == None or self.temperature_handle == None or self.device_name_handle == None or self.battery_handle == None:
+                self.device = None
+                raise Exception("Unable to find all handles")
 
-        self.login()
+            self.login()
+        except:
+            self.__exit__()
+            raise
 
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
         try:
             if self.device:
                 self.device.disconnect()
